@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>La Entrevista</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: una columna tipo "sala de declaración": ficha del caso, transcripción y tres tarjetas de pregunta. */
+:root {
+  --bg: #e9edf2;
+  --paper: #ffffff;
+  --ink: #17233a;
+  --muted: #5b6a82;
+  --line: #cfd7e3;
+  --accent: #2f55d4;
+  --accent-soft: #e2e9ff;
+  --mark: #ffd75e;
+  --good: #1f8a57;  --good-soft: #dcf3e7;
+  --mid:  #b7791f;  --mid-soft:  #fbefd8;
+  --bad:  #c2413b;  --bad-soft:  #fbe1df;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1522; --paper: #172034; --ink: #e6ecf7; --muted: #9aa8c0; --line: #2a3650;
+  --accent: #8aa6ff; --accent-soft: #223056; --mark: #8a6d12;
+  --good: #5fd39a; --good-soft: #143326; --mid: #f0b456; --mid-soft: #3a2c12; --bad: #ff8a83; --bad-soft: #3d1a1a;
+  color-scheme: dark;
+}}
+:root[data-theme="dark"] {
+  --bg: #0f1522; --paper: #172034; --ink: #e6ecf7; --muted: #9aa8c0; --line: #2a3650;
+  --accent: #8aa6ff; --accent-soft: #223056; --mark: #8a6d12;
+  --good: #5fd39a; --good-soft: #143326; --mid: #f0b456; --mid-soft: #3a2c12; --bad: #ff8a83; --bad-soft: #3d1a1a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 17px; line-height: 1.5;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 780px; margin: 0 auto; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+p { margin: 0; }
+.label { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Barra superior */
+.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.brand { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: -.01em; background: none; border: 0; padding: 0; }
+.brand span { background: linear-gradient(transparent 58%, var(--mark) 58%); }
+.meters { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.meter { display: grid; gap: 4px; }
+.steps { display: flex; gap: 4px; }
+.steps i { width: 18px; height: 8px; border-radius: 2px; background: var(--line); }
+.steps i.done-good { background: var(--good); } .steps i.done-mid { background: var(--mid); } .steps i.done-bad { background: var(--bad); }
+.steps i.now { background: var(--accent); }
+.counts { display: flex; gap: 6px; }
+.pill { font-family: var(--f-mono); font-size: 13px; padding: 3px 10px; border-radius: 99px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill.g { background: var(--good-soft); color: var(--good); } .pill.m { background: var(--mid-soft); color: var(--mid); } .pill.b { background: var(--bad-soft); color: var(--bad); }
+
+/* Ficha */
+.ficha { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 20px 22px; display: grid; gap: 14px; }
+.ficha summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.ficha summary::-webkit-details-marker { display: none; }
+.ficha summary .label::after { content: " ▸ ver ficha"; }
+.ficha[open] summary .label::after { content: " ▾ ocultar"; }
+.ficha dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
+.ficha dt { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding-top: 3px; }
+.ficha dd { margin: 0; min-width: 0; }
+.ficha .tener { background: var(--accent-soft); border-radius: 4px; padding: 10px 12px; font-size: 15px; }
+@media (max-width: 520px) { .ficha dl { grid-template-columns: 1fr; gap: 2px; } .ficha dd { margin-bottom: 8px; } }
+
+/* Intro y selector */
+.intro h1 { font-size: clamp(34px, 7vw, 56px); font-weight: 800; letter-spacing: -.02em; }
+.intro p { max-width: 64ch; color: var(--muted); margin-top: 10px; }
+.legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.rule { padding: 12px 14px; border-radius: 6px; font-size: 15px; }
+.rule b { display: block; font-family: var(--f-display); font-size: 18px; }
+.rule.g { background: var(--good-soft); } .rule.g b { color: var(--good); }
+.rule.m { background: var(--mid-soft); }  .rule.m b { color: var(--mid); }
+.rule.b { background: var(--bad-soft); }  .rule.b b { color: var(--bad); }
+.marks-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; color: var(--muted); }
+.cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.case { text-align: left; background: var(--paper); border: 2px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; transition: border-color .15s, transform .15s; }
+.case:hover { border-color: var(--accent); transform: translateY(-2px); }
+.case h3 { font-size: 22px; }
+.case .ev { color: var(--muted); font-size: 15px; }
+.case .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
+.tagw { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+@media (max-width: 600px) { .cases, .legend { grid-template-columns: 1fr; } }
+
+.cta { justify-self: start; background: var(--accent); color: var(--paper); border: 0; border-radius: 6px; padding: 12px 22px; font-family: var(--f-display); font-weight: 700; font-size: 18px; }
+.cta:hover { filter: brightness(1.08); }
+.ghost { background: transparent; border: 2px solid var(--line); border-radius: 6px; padding: 10px 18px; font-family: var(--f-display); font-weight: 700; }
+.ghost:hover { border-color: var(--accent); }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Fase */
+.phase-head { display: grid; gap: 6px; }
+.phase-head h2 { font-size: clamp(26px, 5vw, 36px); font-weight: 700; }
+.principio { justify-self: start; font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; background: var(--mark); color: var(--ink); padding: 2px 8px; border-radius: 3px; }
+.context { color: var(--muted); font-style: italic; }
+.transcript { display: grid; gap: 10px; }
+.line { display: grid; grid-template-columns: 80px 1fr; gap: 12px; align-items: start; }
+.line .who { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding-top: 4px; overflow-wrap: anywhere; }
+.line .said { min-width: 0; }
+.line.wit .said { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.line.you .said { font-weight: 600; padding: 4px 0; }
+.line.new .said { animation: pop .35s ease; }
+@keyframes pop { from { transform: translateY(6px); opacity: .3; } to { transform: none; opacity: 1; } }
+.ok { text-decoration: underline 2px var(--good); text-underline-offset: 3px; }
+.fx { background: var(--bad-soft); color: var(--bad); border-radius: 3px; padding: 0 3px; text-decoration: underline wavy 1px var(--bad); text-underline-offset: 3px; }
+.gain { font-size: 15px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; padding-left: 92px; }
+@media (max-width: 480px) { .gain { padding-left: 0; } }
+
+.options { display: grid; gap: 10px; }
+.opt { text-align: left; background: var(--paper); border: 2px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 28px 1fr; gap: 12px; transition: border-color .15s, transform .15s; }
+.opt:hover:not(:disabled) { border-color: var(--accent); transform: translateX(3px); }
+.opt:disabled { cursor: default; }
+.opt .k { font-family: var(--f-mono); font-size: 14px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.opt .q { font-size: 18px; min-width: 0; }
+.opt .fb { grid-column: 2; display: grid; gap: 4px; font-size: 15px; color: var(--muted); }
+.opt .fb .tag { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.opt.r-good { border-color: var(--good); } .opt.r-good .tag { color: var(--good); } .opt.r-good .k { background: var(--good-soft); color: var(--good); }
+.opt.r-mid  { border-color: var(--mid); }  .opt.r-mid .tag  { color: var(--mid); }  .opt.r-mid .k  { background: var(--mid-soft); color: var(--mid); }
+.opt.r-bad  { border-color: var(--bad); }  .opt.r-bad .tag  { color: var(--bad); }  .opt.r-bad .k  { background: var(--bad-soft); color: var(--bad); }
+.opt.revealed:not(.chosen) { opacity: .62; border-style: dashed; }
+.opt.chosen.r-good { box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--good); }
+.opt.chosen.r-mid  { box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--mid); }
+.opt.chosen.r-bad  { box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--bad); }
+
+/* Resultado */
+.score { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: end; }
+.big { font-family: var(--f-display); font-weight: 800; font-size: clamp(64px, 16vw, 112px); line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.big small { font-size: .35em; color: var(--muted); font-weight: 500; }
+.verdict { min-width: 0; flex: 1 1 260px; }
+.verdict h2 { font-size: 28px; }
+.verdict p { margin-top: 6px; color: var(--muted); max-width: 48ch; }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.box { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.box h3 { font-size: 20px; }
+.box ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.box .none { color: var(--muted); font-style: italic; }
+.box.g h3 { color: var(--good); } .box.b h3 { color: var(--bad); }
+.truth { background: var(--accent-soft); border-radius: 6px; padding: 16px 18px; display: grid; gap: 6px; }
+@media (max-width: 600px) { .compare { grid-template-columns: 1fr; } }
+.review { display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
+.rv { display: grid; grid-template-columns: 6px 1fr auto; gap: 14px; padding: 14px 16px; border-top: 1px solid var(--line); align-items: start; }
+.rv:first-child { border-top: 0; }
+.rv .stripe { align-self: stretch; border-radius: 3px; }
+.rv .body { min-width: 0; display: grid; gap: 3px; }
+.rv .body .q { font-weight: 600; }
+.rv .body .why { color: var(--muted); font-size: 15px; }
+.rv .body .better { font-size: 15px; }
+.rv .body .better b { color: var(--good); font-weight: 600; }
+.rv .pts { font-family: var(--f-display); font-weight: 700; font-variant-numeric: tabular-nums; }
+.s-good { background: var(--good); } .s-mid { background: var(--mid); } .s-bad { background: var(--bad); }
+@media (max-width: 480px) { .line { grid-template-columns: 1fr; gap: 2px; } .rv { grid-template-columns: 6px 1fr; } .rv .pts { grid-column: 2; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.own { background: var(--mid-soft); color: var(--mid); border-radius: 3px; padding: 0 3px; text-decoration: underline dashed 1px var(--mid); text-underline-offset: 3px; }
+.box.o h3 { color: var(--mid); }
+.box s { color: var(--muted); }
+.atestado { border-left: 4px solid var(--accent); padding: 4px 0 4px 14px; font-size: 15px; display: grid; gap: 6px; }
+.atestado b { font-family: var(--f-display); }
+.compare.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 760px) { .compare.three { grid-template-columns: 1fr; } }
+.tablewrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+thead th { border-top: 0; font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; }
+td.y { color: var(--good); } td.n { color: var(--bad); } td.d { color: var(--muted); }
+.debate { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.reveal { display: grid; gap: 14px; }
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* =========================================================
+   CASO: atraco en el Minimarket Rosa (Gràcia, Barcelona) — 4 testigos.
+   Marcas en las respuestas del testigo:
+     [[texto]] = detalle exacto
+     {{texto}} = detalle falso inducido por la pregunta del entrevistador
+     ((texto)) = error propio del testigo (lo aporta él solo, sin que se lo sugieran)
+   Opciones especiales:
+     flag: "meta"     -> activa el control metacognitivo; las respuestas con respuestaMeta cambian
+     corrige: true    -> el testigo corrige sus errores propios (pasan a "corregidos")
+   ========================================================= */
+const PUNTOS = { good: 10, mid: 5, bad: 0 };
+const ETIQUETA = { good: "Bien formulada", mid: "Mejorable", bad: "Mal formulada" };
+
+const ATESTADO = {
+  cabecera: "Mossos d'Esquadra · Comisaría de Gràcia · Diligencia n.º 2026/4471",
+  texto: "Sábado 14/11, aprox. 23:40 h. Robo con intimidación en el Minimarket Rosa, c/ Verdi 112. El dependiente refiere que un individuo le exigió el dinero de la caja y huyó. Presenta una contusión leve. La cámara del local no funcionaba.",
+  objetivo: "Obtener descripción del autor o autores, objeto empleado, vehículo y dirección de huida."
+};
+
+const HECHOS = [
+  "23:36 · Llega una scooter gris oscuro con dos hombres y para en doble fila delante de la tienda. La matrícula termina en 47.",
+  "23:38 · El autor 1 entra; el autor 2 se queda en la moto con el motor encendido. El autor 1 se cuela delante de Laia, saca un destornillador grande de mango amarillo (no un cuchillo) y dice: «La caja. Rápido. No me hagas hacerlo».",
+  "23:39 · Ravi, el dependiente, le da 385 € de la caja. El autor 1 coge también dos cartones de tabaco. Al salir empuja a Ravi, que cae contra la estantería de patatas.",
+  "23:40 · Huyen calle arriba (dirección montaña) y giran a la derecha en la primera esquina. Todo duró 1 minuto y 40 segundos.",
+  "Autor 1: 25-30 años, 1,80 m, delgado. Chaqueta acolchada verde oliva con capucha y gorra negra debajo. Mascarilla quirúrgica azul (se la baja al hablar). Vaqueros oscuros, zapatillas blancas con suela roja. Tatuaje de una golondrina en el dorso de la mano derecha. Acento local, voz ronca, olor a tabaco.",
+  "Autor 2: 30-40 años, barba corta, casco blanco abierto tipo jet, chaqueta negra, mochila cuadrada de reparto amarilla. No baja de la moto.",
+  "Solo había dos autores. No hubo cuchillo, ni pistola, ni nadie vigilando en la esquina (era un vecino paseando al perro)."
+];
+
+const CASOS = [
+{
+  id: "montse", grupo: "Persona mayor", nombre: "Montse", edad: "81 años",
+  titulo: "Testigo 1 · Montse, 81 años",
+  evento: "La vecina del balcón de enfrente. Vio la llegada y la huida desde arriba.",
+  datos: [
+    ["Testigo", "Montserrat P., 81 años. Viuda, jubilada (fue modista). Vive sola enfrente de la tienda desde hace 50 años"],
+    ["Dónde estaba", "En su balcón del primer piso, sin las gafas de lejos"],
+    ["Entrevista", "Domingo por la mañana, en su casa"]
+  ],
+  tener: "Su punto fuerte es el vehículo, el conductor y la huida: conoce el barrio. Su punto débil, la hora y la sugestionabilidad. Lleva audífono en el oído izquierdo y se va por las ramas. Hace dos años atracaron la farmacia de la esquina con una moto roja: si se menciona, puede mezclar los dos sucesos.",
+  fases: [
+    { fase: "Introducción", principio: "Rapport, adaptación y rol activo",
+      contexto: "Montse te abre la puerta y te ofrece un café. Os sentáis en el comedor.", testigo: null,
+      opciones: [
+        { q: "Buenos días, Montse, gracias por recibirme. Me siento aquí delante para que me oiga bien. Usted vio lo que pasó y yo no, así que vamos a su ritmo.", calidad: "good", tipo: "Rapport + adaptación + rol activo",
+          porque: "Tiene en cuenta el audífono, le cede el protagonismo y deja claro que el ritmo lo marca ella.",
+          respuesta: "Ay, qué bien, porque por este oído no oigo nada. Cincuenta años llevo aquí, conozco a todo el mundo. Yo estaba [[en el balcón, recogiendo la ropa porque había empezado a llover]]." },
+        { q: "Buenos días, Montse, gracias por recibirme. Para no robarle mucho tiempo, yo le haré unas preguntas concretas y usted me va contestando, ¿le parece bien?", calidad: "mid", tipo: "Testigo en rol pasivo",
+          porque: "Es amable, pero la coloca en un papel pasivo de responder preguntas. La EC pide cederle el control del relato. Tampoco tiene en cuenta el audífono.",
+          respuesta: "Sí, sí, usted pregunte... aunque no sé si sabré contestarle bien." },
+        { q: "Buenos días, Montse, gracias por recibirme. No se preocupe si no se acuerda de todo, que a su edad es lo más normal. Iremos poco a poco.", calidad: "bad", tipo: "Expectativa negativa · edadismo",
+          porque: "Suena comprensivo, pero le transmite que su memoria no es fiable por la edad. Esa expectativa reduce su confianza y lo que cuenta.",
+          respuesta: "Bueno... sí, ya no tengo la memoria de antes. Igual no le sirvo de mucho." }
+      ] },
+    { fase: "Reinstauración del contexto", principio: "Contexto físico: entrevistar en el lugar",
+      contexto: "La entrevista es en su casa, a pocos pasos del balcón.", testigo: "Yo esa noche estaba con mis cosas, ¿sabe?",
+      opciones: [
+        { q: "¿Le parece que salgamos un momento al balcón? Póngase donde estaba esa noche y piense con calma en la ropa, la lluvia y lo que oía.", calidad: "good", tipo: "Reinstauración del contexto físico",
+          porque: "Aprovecha que la entrevista es en su casa para volver al lugar real del suceso. Es la forma más potente de reinstaurar el contexto.",
+          respuesta: "Aquí, con las pinzas en la mano. Llovía flojito. Y abajo había [[una moto parada en doble fila]] [[con el motor en marcha, que hacía mucho ruido]]." },
+        { q: "Para empezar a situarnos, ¿recuerda más o menos a qué hora fue? Así me hago una idea de cómo estaba la calle en ese momento.", calidad: "mid", tipo: "Determinativa sobre su punto débil",
+          porque: "La hora es justo lo que Montse no sabe. Pedir un dato que no codificó lleva a una estimación equivocada.",
+          respuesta: "Serían ((las once)), porque acababa de terminar el concurso de la tele." },
+        { q: "Para situarnos un poco, supongo que usted estaría viendo la tele y se asomó al oír el ruido de la calle. ¿Fue más o menos así?", calidad: "bad", tipo: "Con expectativa · introduce información",
+          porque: "Le propone una versión de lo que hacía. Ella estaba recogiendo la ropa, pero acepta la propuesta del entrevistador.",
+          respuesta: "Sí, eso, {{estaba con la tele}} y {{me asomé por el ruido}}." }
+      ] },
+    { fase: "Narración libre", principio: "Relato completo y sin interrupciones",
+      contexto: "Es el momento de que Montse cuente lo que vio.", testigo: "Pues mire, lo vi todo desde aquí arriba.",
+      opciones: [
+        { q: "Cuénteme con todo el detalle que pueda lo que vio desde el balcón, aunque le parezca poco importante. Tómese su tiempo, que yo la escucho.", calidad: "good", tipo: "Narración libre + informe completo",
+          porque: "Pregunta abierta y con calma: deja que salga todo lo que recuerda, también la mochila amarilla, aunque se vaya por las ramas.",
+          respuesta: "La moto era [[gris oscurita]]. El de la moto llevaba [[una de esas mochilas cuadradas amarillas de los repartidores]] y [[un casco blanco]]; pensé que era un repartidor. Luego oí [[un golpe fuerte y cosas que se caían]] dentro de la tienda, y [[un chico salió corriendo con algo bajo el brazo, como cajas]], y [[se subió detrás]]. Como cuando el hijo de la Pepi se compró la moto, que no veas el ruido..." },
+        { q: "Cuénteme brevemente lo que vio desde el balcón, solo lo más importante, y luego ya iremos entrando en los detalles que hagan falta.", calidad: "mid", tipo: "Narración demasiado corta",
+          porque: "Pedir un resumen recorta el relato libre. Montse se queda con lo básico y se pierde la mochila amarilla.",
+          respuesta: "Pues [[una moto]]... y [[un chico que salió corriendo]]... y se fueron. No sé, hija." },
+        { q: "Empecemos por la moto, que me será muy útil. ¿Recuerda si era de color rojo o de color negro? Con lo que me diga ya me apaño.", calidad: "bad", tipo: "Disyuntiva imperfecta (Stern)",
+          porque: "Ofrece solo dos opciones y ninguna es la correcta. Montse acepta la que más le suena, por el robo de la farmacia.",
+          respuesta: "Pues... {{rojiza}}, sí. Puede ser {{roja}}." }
+      ] },
+    { fase: "Exploración: las personas", principio: "Determinativa · permiso para «no lo sé»",
+      contexto: "Quieres saber qué vio de los autores.", testigo: "Eran dos: el de la moto y el que salió corriendo.",
+      opciones: [
+        { q: "¿Pudo ver las caras desde el balcón? Si no, no pasa nada, porque «no lo sé» también me sirve. Cuénteme lo que sí vio de ellos.", calidad: "good", tipo: "Determinativa + «no lo sé»",
+          porque: "No presupone que viera las caras, le permite no saber (control metacognitivo) y abre a lo que sí recuerda.",
+          respuesta: "Las caras no, hija; sin las gafas de lejos no. Eso no lo sé. Lo que sí: [[eran dos]], y el que corrió llevaba [[un anorak caqui, como militar]], [[con la capucha puesta]]." },
+        { q: "Me ayudaría mucho saber la estatura de los dos. Desde el balcón, ¿qué altura diría usted que tenía cada uno, más o menos?", calidad: "mid", tipo: "Estimación desde una posición difícil",
+          porque: "Desde un primer piso, la altura de alguien es muy difícil de estimar. Es poco fiable y no aprovecha su punto fuerte.",
+          respuesta: "Ay, desde arriba todos parecen bajitos. No sé." },
+        { q: "Me ayudaría mucho una descripción del chico de la moto. ¿Qué cara tenía? Cualquier cosa que recuerde de su cara me será muy útil.", calidad: "bad", tipo: "Implicativa (Stern)",
+          porque: "Presupone que vio la cara. Montse, sin querer decepcionar, inventa una descripción estereotipada.",
+          respuesta: "Pues... {{moreno}}, {{de aquí no era}}, eso seguro." }
+      ] },
+    { fase: "Exploración: la huida", principio: "Interrogatorio adecuado al testigo · claves sensoriales",
+      contexto: "Montse conoce todas las calles del barrio.", testigo: "Y luego se fueron, como alma que lleva el diablo.",
+      opciones: [
+        { q: "Usted conoce estas calles mejor que nadie. ¿Por dónde los vio marcharse? Piense también en los ruidos que oyó en ese momento.", calidad: "good", tipo: "Adaptada al testigo + clave auditiva",
+          porque: "Aprovecha su conocimiento del barrio (su punto fuerte) y suma una clave sensorial distinta a la visual.",
+          respuesta: "[[Hacia arriba, hacia la montaña]], y [[giraron por la calle de la farmacia, a la derecha]]. De eso estoy segurísima. Y la moto [[arrancó haciendo un ruido tremendo]]." },
+        { q: "Muchas gracias, me está ayudando mucho. ¿Hay algo más que recuerde de esa noche, o le parece que con esto ya lo tenemos todo?", calidad: "mid", tipo: "Claves no exploradas",
+          porque: "Invita a terminar sin ofrecer otras vías de recuperación. La dirección de huida, que ella conoce bien, se queda sin salir.",
+          respuesta: "No, creo que con esto ya está." },
+        { q: "Usted conoce bien el barrio. ¿Le recordó a lo de la farmacia de hace dos años? Aquel robo también fue con una moto, ¿verdad?", calidad: "bad", tipo: "Información de otro suceso",
+          porque: "Activa el recuerdo de otro robo. Montse mezcla los dos sucesos (memoria reconstructiva).",
+          respuesta: "¡Uy, igual que aquella vez! {{Sería la misma moto roja}}, {{los mismos de la otra vez}}." }
+      ] },
+    { fase: "Revisión", principio: "Repasar con el testigo y permitir correcciones",
+      contexto: "Repasas tus notas con Montse.", testigo: null,
+      opciones: [
+        { q: "Le leo lo que he apuntado y usted me corrige: moto gris oscura, conductor con casco blanco, chico con anorak caqui. ¿Cambiaría o añadiría algo?", calidad: "good", tipo: "Revisión con el testigo",
+          porque: "Le permite corregir y añadir. La revisión funciona como una nueva clave de recuperación.",
+          respuesta: "Sí, eso es. Y el de la moto [[no se bajó en ningún momento]], ¿eh? Ahí quieto, esperando." },
+        { q: "Creo que con lo que me ha contado ya tengo bastante. Lo pasaré a limpio y otro día se lo traigo para que lo firme, ¿le parece?", calidad: "mid", tipo: "Revisión omitida",
+          porque: "Se pierde la oportunidad de corregir errores y de recuperar información nueva con ella delante.",
+          respuesta: "Como usted vea. Muy bien." },
+        { q: "Perdone que insista, es solo para estar seguros, que es importante: ¿la moto era gris? ¿Gris seguro? Piénselo con calma, que no hay ninguna prisa.", calidad: "bad", tipo: "Pregunta repetida",
+          porque: "Repetir una pregunta, aunque sea con amabilidad, le transmite que la primera respuesta estaba mal, y la testigo la cambia.",
+          respuesta: "Bueno... si me lo pregunta tanto... {{igual era más rojiza}}." }
+      ] },
+    { fase: "Cierre", principio: "Puerta abierta y relación positiva",
+      contexto: "La entrevista termina.", testigo: null,
+      opciones: [
+        { q: "Muchas gracias, Montse, nos ha ayudado mucho. Si en los próximos días recuerda algo más, aunque sea pequeño, llámeme a este número.", calidad: "good", tipo: "Cierre: nueva información + vínculo",
+          porque: "Deja abierta la puerta a información posterior y consolida una relación positiva.",
+          respuesta: "Claro que sí. Y vuelva cuando quiera, que le hago otro café." },
+        { q: "Muchas gracias, Montse, nos ha ayudado mucho. Ya hemos terminado, así que puede seguir con sus cosas tranquilamente. Que tenga buen día.", calidad: "mid", tipo: "Cierre sin puerta abierta",
+          porque: "Es cordial, pero no le indica que puede aportar información nueva si la recuerda más adelante.",
+          respuesta: "Igualmente, hija. Adiós." },
+        { q: "Muchas gracias, Montse, nos ha ayudado mucho. Entonces apunto que era una moto roja y un chico moreno, de fuera, ¿verdad?", calidad: "bad", tipo: "Retroalimentación confirmatoria",
+          porque: "Cierra confirmando detalles que no vio. Su seguridad en ellos aumentará en futuras declaraciones.",
+          respuesta: "Sí, sí, {{roja y moreno}}, eso es." }
+      ] }
+  ]
+},
+{
+  id: "pol", grupo: "Niño", nombre: "Pol", edad: "8 años",
+  titulo: "Testigo 2 · Pol, 8 años",
+  evento: "El niño del pasillo de golosinas. Vio al autor 1 de muy cerca y desde abajo.",
+  datos: [
+    ["Testigo", "Pol G., 8 años, 3.º de primaria. Volvía con su madre de un cumpleaños. Le encantan las zapatillas y los pájaros"],
+    ["Dónde estaba", "En el pasillo de las golosinas, a unos 2 metros de la caja. Su madre, al fondo, en las neveras"],
+    ["Entrevista", "Domingo por la mañana, en comisaría"]
+  ],
+  tener: "Es el único que puede recordar zapatillas, tatuaje y objeto, porque vio al autor a la altura de manos y pies. Es tímido con adultos desconocidos, muy vulnerable a preguntas cerradas y a la repetición, y si nota que el adulto espera una respuesta, la da. Con menores, en la realidad se aplican protocolos específicos (especialistas, grabación y, si se puede, una sola entrevista).",
+  fases: [
+    { fase: "Introducción", principio: "Rapport con un tema neutro",
+      contexto: "Pol entra mirando al suelo. Se sienta muy quieto.", testigo: null,
+      opciones: [
+        { q: "Hola, Pol, gracias por venir. Hoy no llevo uniforme porque solo vengo a escuchar. Me han dicho que te gustan los pájaros, ¿cuál es tu favorito?", calidad: "good", tipo: "Rapport · intereses del niño",
+          porque: "Sin uniforme y hablando de algo suyo, Pol se suelta. Además, sus intereses servirán después como claves de recuperación.",
+          respuesta: "¡La golondrina! Tengo un libro de aves. Y también me gustan mucho las zapatillas de deporte." },
+        { q: "Hola, Pol, gracias por venir. Hoy vamos a hablar un ratito de lo que pasó en la tienda. Cuéntame, ¿qué viste cuando estabas allí dentro?", calidad: "mid", tipo: "Sin fase de rapport",
+          porque: "Es amable, pero va directo a los hechos con un niño tímido ante un adulto desconocido. Responde con monosílabos.",
+          respuesta: "(Se encoge de hombros.) Un señor." },
+        { q: "Hola, Pol, gracias por venir. Tu madre ya nos ha explicado lo que pasó, así que tú solo tienes que ayudarnos a confirmarlo, ¿vale?", calidad: "bad", tipo: "Contaminación por un adulto",
+          porque: "Le dice que la respuesta ya existe y que solo debe confirmarla. Con su deseo de agradar, repetirá lo que crea que dijo su madre.",
+          respuesta: "Vale... lo que diga mi madre." }
+      ] },
+    { fase: "Reinstauración del contexto", principio: "El niño es el experto · contexto",
+      contexto: "Pol ya parece más tranquilo.", testigo: "Fuimos a la tienda a comprar agua.",
+      opciones: [
+        { q: "Yo no estaba en la tienda, así que tú sabes más que yo. Si algo no lo sabes, puedes decir «no lo sé». ¿Dónde estabas tú?", calidad: "good", tipo: "Rol de experto + «no lo sé» + contexto",
+          porque: "Le explica que él es el experto, le da permiso para no saber y le ayuda a situarse mentalmente en el lugar.",
+          respuesta: "Estaba [[en el pasillo de las golosinas]], cerca de la caja. Mi madre estaba al fondo, en las neveras, cogiendo el agua." },
+        { q: "Para empezar, me gustaría saber una cosa que me ayudará mucho: ¿cuánto rato crees que duró todo lo que pasó en la tienda?", calidad: "mid", tipo: "Estimación temporal",
+          porque: "Un niño de 8 años no puede estimar duraciones. La respuesta es poco útil y errónea.",
+          respuesta: "((Mucho rato)). Mucho, mucho." },
+        { q: "Para empezar, me gustaría saber dónde estabas. Estabas con tu madre en las neveras cogiendo el agua, ¿verdad? Así me sitúo mejor.", calidad: "bad", tipo: "Sí/no con expectativa",
+          porque: "Le propone una ubicación que no es la suya. Pol estaba solo en el pasillo de golosinas, pero dice que sí.",
+          respuesta: "Sí... {{estaba con mi madre en las neveras}}." }
+      ] },
+    { fase: "Narración libre", principio: "Relato completo y adaptado a su lenguaje",
+      contexto: "Le pides que cuente lo que pasó.", testigo: "Y entonces entró un chico.",
+      opciones: [
+        { q: "Cuéntame todo lo que pasó desde que entró el chico, todo, todo, aunque sean cosas pequeñitas. Yo te escucho y no te interrumpo.", calidad: "good", tipo: "Narración libre adaptada",
+          porque: "Pregunta abierta en su lenguaje. El relato será breve y desordenado, pero con detalles exactos.",
+          respuesta: "Era [[alto, como mi tío]]. [[Le dijo al señor que le diera el dinero rápido]]. Llevaba [[un hierro amarillo, como de herramientas, como el que tiene mi abuelo]]. Luego [[empujó al señor y se cayeron todas las patatas]]." },
+        { q: "Cuéntame qué pasó cuando entró el chico: quién era, qué quería, qué le dijo al señor de la caja y si el señor tenía miedo.", calidad: "mid", tipo: "Preguntas encadenadas",
+          porque: "Cuatro preguntas seguidas superan sus recursos cognitivos. Responde solo a una.",
+          respuesta: "No sé... [[quería dinero]]." },
+        { q: "Cuéntame una cosa que me interesa mucho de cuando entró el chico: el cuchillo que llevaba, ¿era grande o era pequeño?", calidad: "bad", tipo: "Implicativa + disyuntiva (Stern)",
+          porque: "Presupone un cuchillo y solo deja elegir el tamaño. Pol acepta el cuchillo: es un error de comisión creado por el entrevistador.",
+          respuesta: "{{Grande}}. {{Un cuchillo muy grande}}." }
+      ] },
+    { fase: "Exploración: el autor", principio: "Intereses como clave · dibujo",
+      contexto: "Pol vio al chico desde abajo, a la altura de manos y pies.", testigo: "Del chico me acuerdo un poco.",
+      opciones: [
+        { q: "Como te gustan las zapatillas y los pájaros, quizá te fijaste en cosas que los mayores no ven. ¿Quieres dibujar al chico como lo recuerdas?", calidad: "good", tipo: "Intereses como clave + dibujo",
+          porque: "Usa sus intereses como claves de recuperación y le ofrece un medio no verbal adaptado a su edad.",
+          respuesta: "(Dibuja.) Llevaba [[unas bambas blancas con la suela roja, muy chulas]]. Y [[tenía un pájaro dibujado en la mano, una golondrina]], ¡como la de mi libro!" },
+        { q: "Ahora vamos a pensar en el chico. Me ayudaría mucho saber cuántos años tenía, más o menos. ¿Qué edad crees que podía tener?", calidad: "mid", tipo: "Estimación de edad",
+          porque: "Pol no le miró la cara (tuvo miedo y miró al suelo). La respuesta es vaga y poco útil.",
+          respuesta: "Mayor. Como un papá." },
+        { q: "Ahora vamos a pensar en el chico. Me ayudaría mucho saber cómo era su cara. Dime, ¿llevaba gafas? Seguro que te fijaste bien.", calidad: "bad", tipo: "Sí/no con expectativa",
+          porque: "Con preguntas de sí o no, y más con «seguro que te fijaste», Pol contesta «sí» aunque no lo sepa: no le vio la cara.",
+          respuesta: "{{Sí, gafas}}." }
+      ] },
+    { fase: "Exploración: otras claves", principio: "Variedad de claves · sonidos",
+      contexto: "Pol se queda callado.", testigo: "Ya no me acuerdo de más.",
+      opciones: [
+        { q: "Me estás ayudando muchísimo. Ahora piensa en los ruidos que había en la tienda cuando pasó todo. ¿Qué cosas oías tú?", calidad: "good", tipo: "Clave sensorial (auditiva)",
+          porque: "Una vía de recuperación distinta (el sonido) puede abrir recuerdos que no salían por la vista.",
+          respuesta: "El señor de la caja hizo «¡ay!» y [[las patatas hicieron mucho ruido al caerse]]. Y [[el chico se llevó el dinero]] en la mano." },
+        { q: "Me estás ayudando muchísimo. ¿Seguro que no te acuerdas de nada más? Piénsalo bien, con calma, que tenemos todo el tiempo.", calidad: "mid", tipo: "Insistencia sin claves",
+          porque: "Insiste sin ofrecer otra vía de recuperación. El niño puede pensar que lo que dijo antes no era suficiente.",
+          respuesta: "No... no sé." },
+        { q: "Me estás ayudando muchísimo. Y en la puerta había otro chico vigilando, ¿a que sí? A lo mejor lo viste desde el pasillo.", calidad: "bad", tipo: "Con expectativa · coletilla",
+          porque: "El «¿a que sí?» empuja a asentir. Pol no vio la calle, pero confirma.",
+          respuesta: "Sí... {{había otro}}." }
+      ] },
+    { fase: "Revisión", principio: "Repasar sin repetir preguntas",
+      contexto: "Repasas lo que ha contado. Antes ha hablado de «un hierro amarillo».", testigo: null,
+      opciones: [
+        { q: "Ahora te repito lo que me has contado y tú me corriges si me equivoco en algo. ¿Quieres cambiar o añadir alguna cosa?", calidad: "good", tipo: "Revisión con el testigo",
+          porque: "Le deja corregir y añadir sin poner en duda lo que ha dicho.",
+          respuesta: "Está bien. Y [[el señor de la caja se cayó encima de las patatas]]." },
+        { q: "Con todo lo que me has contado ya tengo bastante para hacer mi trabajo. Lo has hecho muy bien, así que podemos terminar.", calidad: "mid", tipo: "Revisión omitida",
+          porque: "Se pierde la oportunidad de corregir errores y recuperar información.",
+          respuesta: "Vale." },
+        { q: "Solo quiero asegurarme de una cosa, que es muy importante: el hierro que llevaba, ¿seguro que era amarillo? ¿Amarillo, amarillo?", calidad: "bad", tipo: "Pregunta repetida",
+          porque: "Al repetir la pregunta, Pol cree que su primera respuesta estaba mal y la cambia.",
+          respuesta: "Bueno... {{era negro}}." }
+      ] },
+    { fase: "Cierre", principio: "Puerta abierta y relación positiva",
+      contexto: "La entrevista termina.", testigo: null,
+      opciones: [
+        { q: "Lo has hecho genial, Pol. Si te acuerdas de algo más, se lo cuentas a tu madre y ella me llama. ¿Quieres preguntarme algo?", calidad: "good", tipo: "Cierre: nueva información + vínculo",
+          porque: "Deja abierta la puerta a información nueva y termina con una experiencia positiva para el niño.",
+          respuesta: "¿Te dibujo también la golondrina para ti?" },
+        { q: "Lo has hecho genial, Pol. Ya hemos terminado, así que ya puedes irte con tu madre a casa. ¡Que pases un buen domingo!", calidad: "mid", tipo: "Cierre sin puerta abierta",
+          porque: "Es cálido, pero no le dice que puede contar algo nuevo si lo recuerda más adelante.",
+          respuesta: "Adiós." },
+        { q: "Lo has hecho genial, Pol. Y si otro día te lo preguntan, acuérdate de que era un cuchillo, ¿vale? Así lo dices igual.", calidad: "bad", tipo: "Refuerzo de información falsa",
+          porque: "Fija en su memoria un detalle que viene del adulto. En otra entrevista lo repetirá con más seguridad.",
+          respuesta: "Vale, {{un cuchillo}}." }
+      ] }
+  ]
+},
+{
+  id: "alex", grupo: "Bajo los efectos del alcohol", nombre: "Àlex", edad: "23 años",
+  titulo: "Testigo 3 · Àlex, 23 años",
+  evento: "Fumaba en la puerta del bar de al lado, a dos metros de la moto. Había bebido mucho.",
+  datos: [
+    ["Testigo", "Àlex R., 23 años, estudiante de ingeniería y aficionado a las motos. Celebraba un cumpleaños desde las 20:00 (unas 5 cervezas y 2 cubatas)"],
+    ["Dónde estaba", "En la puerta del bar de al lado, fumando, a unos 2 metros de la moto. Le pidió fuego al conductor"],
+    ["Entrevista", "Domingo por la mañana, en comisaría, ya sobrio"]
+  ],
+  tener: "Es el único que tiene datos de la cara del conductor y de la matrícula, pero mezcla lo que vio con lo que «suele pasar en un atraco» y lo cuenta todo con mucha seguridad. Según Crossland et al. (2020), con una intoxicación grave se recuerdan menos detalles (sobre todo del entorno), pero no menos exactos, y la entrevista cognitiva mejorada aumenta los detalles correctos también en testigos intoxicados. La amnesia alcohólica no borra el recuerdo: con buenas claves se recupera. Los autores recomiendan no usar el cambio de orden ni de perspectiva con estos testigos.",
+  fases: [
+    { fase: "Saludo y rapport", principio: "Personalizar y hablar de temas neutros",
+      contexto: "Àlex llega con gafas de sol y una botella de agua.", testigo: null,
+      opciones: [
+        { q: "Hola, Àlex, gracias por venir. Me han dicho que estudias ingeniería y que te gustan las motos. ¿Qué tal llevas el curso?", calidad: "good", tipo: "Rapport con temas neutros",
+          porque: "Como en el protocolo del artículo, antes de hablar del suceso se personaliza la entrevista y se habla de temas neutros hasta que el testigo está relajado.",
+          respuesta: "Bien, con exámenes. Y sí, las motos me flipan, tengo una de 125. Oye, que yo vengo a ayudar en lo que pueda, ¿eh?" },
+        { q: "Hola, Àlex, gracias por venir. Para empezar con buen pie, ¿me dices tu nombre completo, tu DNI y a qué hora saliste del bar?", calidad: "mid", tipo: "Interrogatorio estándar",
+          porque: "Es correcto, pero empieza con datos administrativos y preguntas breves, sin la fase de rapport que precede al relato.",
+          respuesta: "Àlex Roca... ¿La hora? Ni idea, tío." },
+        { q: "Hola, Àlex, gracias por venir. Antes de nada, para hacerme una idea, ¿cuánto habías bebido esa noche, más o menos?", calidad: "bad", tipo: "Foco en su estado",
+          porque: "Aunque se pregunte con amabilidad, empezar por lo que bebió le hace sentirse juzgado, y entonces colabora menos.",
+          respuesta: "Pues bastante... ¿Me vas a tomar en serio o no? Te cuento lo básico y ya." }
+      ] },
+    { fase: "Propósito e instrucciones", principio: "Transferir el control · contarlo todo sin adivinar",
+      contexto: "Le explicas para qué es la entrevista.", testigo: "Pregunta lo que quieras, que yo lo vi todo.",
+      opciones: [
+        { q: "Te explico: tú estabas allí y yo no, así que tú llevas el relato. Cuéntame todo lo que recuerdes, pero sin adivinar; lo que supongas, dímelo aparte.", calidad: "good", tipo: "Transferir el control + «no adivines»", flag: "meta",
+          porque: "Explica el objetivo, cede el control y da la instrucción del artículo: informar de todo, pero sin adivinar. Con Àlex es clave, porque rellena los huecos con lo que «suele pasar».",
+          respuesta: "Vale, entendido. Solo lo que vi. Lo demás te lo digo como «me imagino que...»." },
+        { q: "Te explico: tú estabas allí y lo viste todo de cerca, así que cuéntamelo con toda la seguridad que puedas. Cuanta más seguridad, mejor para el caso.", calidad: "mid", tipo: "Pide seguridad, no exactitud",
+          porque: "La confianza no indica exactitud. Pedir seguridad le anima a presentar como hechos cosas que solo supone.",
+          respuesta: "¡Eso! Lo vi todo, tío. Segurísimo." },
+        { q: "Te explico: como estabas a dos metros, seguro que pudiste ver bien el arma que llevaba. Empecemos por ahí, si te parece: ¿cómo era exactamente?", calidad: "bad", tipo: "Implicativa (Stern)",
+          porque: "Presupone un arma y le pide describirla. Àlex la confirma con total seguridad.",
+          respuesta: "Sí, sí, {{un cuchillo}}, {{lo vi brillar}}." }
+      ] },
+    { fase: "Reinstauración del contexto", principio: "Reinstauración mental con pausas",
+      contexto: "Àlex se quita las gafas de sol.", testigo: "Estaba fuera, fumando.",
+      opciones: [
+        { q: "Cierra los ojos o mira al suelo, como prefieras. Piensa en ese sábado... qué hacías antes de salir a fumar... el tiempo que hacía... Sin prisa.", calidad: "good", tipo: "Reinstauración mental (guion del artículo)",
+          porque: "Sigue el guion de reinstauración del estudio: ojos cerrados o mirada fija, pausas y claves del día. Si la amnesia es aguda y no un recuerdo perdido, estas claves ayudan a recuperarlo.",
+          respuesta: "...Estábamos en el cumple y salí a fumar. Llovía un poco. No tenía mechero y [[le pedí fuego al de la moto]], que [[me dijo que no con la cabeza]]." },
+        { q: "Para situarme bien, ¿cuánto tiempo llevabas fuera del bar cuando pasó todo? Más o menos, no hace falta que sea exacto, tranquilo.", calidad: "mid", tipo: "Dato poco relevante",
+          porque: "No ayuda a situarse en el suceso y gasta esfuerzo en un dato que no podrá estimar.",
+          respuesta: "Ni idea. ¿Cinco minutos? ¿Veinte?" },
+        { q: "Para situarme bien, esa noche había gente un poco rara por la calle, ¿verdad? Cuéntame cómo era el ambiente por allí fuera.", calidad: "bad", tipo: "Con expectativa · prejuicio",
+          porque: "Le invita a completar con estereotipos, justo lo que Àlex tiende a hacer.",
+          respuesta: "Sí, {{gente chunga}}. {{Seguro que eran de fuera}}." }
+      ] },
+    { fase: "Relato libre", principio: "Informar de todo · sin interrupciones",
+      contexto: "Àlex tiene la escena en la cabeza.", testigo: "Vale, ya lo tengo.",
+      opciones: [
+        { q: "Cuando tengas la imagen clara, cuéntame todo lo que recuerdes de lo que pasó, aunque te parezca poco importante. No te voy a interrumpir.", calidad: "good", tipo: "Relato libre",
+          porque: "Recoge todo su relato. Aun así, Àlex mezcla lo que vio con lo que supone: por eso importan las instrucciones previas.",
+          respuesta: "El de la moto [[tenía barba]] y [[un casco blanco de esos abiertos]]. El otro [[salió corriendo]], [[se subió detrás]] y [[arrancaron a tope hacia arriba]]. Llevaba ((un cuchillo, lo vi brillar)). Y ((eran tres: había otro vigilando en la esquina))",
+          respuestaMeta: "El de la moto [[tenía barba]] y [[un casco blanco de esos abiertos]]. El otro [[salió corriendo]], [[se subió detrás]] y [[arrancaron a tope hacia arriba]]. Llevaba un cuchillo... bueno, no: eso no lo vi, me lo imagino porque era un atraco. Y había alguien en la esquina, pero igual era un vecino. No lo sé." },
+        { q: "Cuéntame, para ir al grano, quiénes fueron los que atracaron la tienda y qué hicieron. Con lo principal me basta de momento.", calidad: "mid", tipo: "Pide una conclusión",
+          porque: "Pide una conclusión sobre algo que no vio (el interior de la tienda) y recorta el relato. Àlex lo completa con seguridad.",
+          respuesta: "Pues ((tres tíos)), seguro. Entraron, robaron y se piraron." },
+        { q: "Cuéntame lo que pasó, y sobre todo una cosa: ¿no viste el cuchillo? Estabas a dos metros, seguro que algo pudiste ver.", calidad: "bad", tipo: "Con expectativa (Stern)",
+          porque: "La negación y el «seguro que» sugieren que debería haberlo visto. Àlex refuerza la comisión con más seguridad.",
+          respuesta: "Sí, sí, {{un cuchillo seguro}}, {{bien grande}}." }
+      ] },
+    { fase: "Preguntas: la moto", principio: "Preguntas compatibles con el testigo",
+      contexto: "En su relato, lo primero que ha mencionado es la moto y el conductor.", testigo: "La moto la tenía justo al lado.",
+      opciones: [
+        { q: "Has mencionado la moto y al conductor. Como sabes de motos, ¿puedes contarme más sobre ellos? Todo lo que te venga, sin prisa.", calidad: "good", tipo: "Abierta sobre un tema que él mencionó",
+          porque: "Retoma un tema que el testigo ha mencionado, en su mismo orden, con una pregunta abierta (preguntas compatibles con el testigo, como en el artículo) y aprovecha su afición.",
+          respuesta: "[[Una scooter gris, de 125, de las típicas]]. Y [[la matrícula acababa en 47]]; me acuerdo porque es el número de mi portal." },
+        { q: "Has mencionado la moto. ¿Te acuerdas de la matrícula entera? Inténtalo aunque te cueste un poco, que nos sería muy útil.", calidad: "mid", tipo: "Presión sobre un detalle",
+          porque: "Insistir en un dato que no codificó entero le lleva a rellenarlo.",
+          respuesta: "Entera no... [[acababa en 47]], y antes ((una B o una C, seguro))." },
+        { q: "Has mencionado la moto. Seguro que era robada, como suelen ser las de estos atracos. ¿Viste algo que lo indicara?", calidad: "bad", tipo: "Sugestiva · esquema de «atraco»",
+          porque: "Activa el esquema de atraco que Àlex ya usa para rellenar sus huecos.",
+          respuesta: "Fijo, {{robada}}. {{Seguro que le habían quitado la placa}}." }
+      ] },
+    { fase: "Preguntas: la huida", principio: "Preguntas compatibles · sin cambio de orden",
+      contexto: "Lo siguiente que ha mencionado es que el otro salió corriendo.", testigo: "Y luego se piraron, eso es todo.",
+      opciones: [
+        { q: "Has mencionado que el otro salió corriendo y se subió a la moto. ¿Puedes contarme más sobre ese momento? Lo que recuerdes, sin adivinar.", calidad: "good", tipo: "Abierta sobre un tema que él mencionó",
+          porque: "Sigue el orden de su propio relato y pide ampliar con una pregunta abierta. Así salen detalles nuevos sin aumentar las confabulaciones.",
+          respuesta: "Pues se subió detrás y arrancaron... Y ahora que lo pienso, [[la moto ya estaba parada antes de que yo saliera a fumar]]. Eso sí lo vi." },
+        { q: "Probemos otra técnica: cuéntamelo ahora todo desde el final hacia el principio, a ver si así te sale algo nuevo.", calidad: "mid", tipo: "Cambio de orden temporal",
+          porque: "Con testigos intoxicados, el artículo recomienda no usar el cambio de orden ni de perspectiva: no aportan más que pedir «inténtalo otra vez», y sin ellos hay menos confabulaciones.",
+          respuesta: "Del final... se van... el otro sale... y antes había ((otro tío en la esquina mirando)), creo." },
+        { q: "Has mencionado que salió corriendo. Iban armados los dos, ¿verdad? ¿Qué llevaba en las manos el de la moto?", calidad: "bad", tipo: "Con expectativa + implicativa",
+          porque: "Introduce armas y una implicación del conductor que Àlex no ha visto.",
+          respuesta: "{{Los dos}}, sí. {{El de la moto también llevaba algo}}." }
+      ] },
+    { fase: "Revisión", principio: "Separar lo visto de lo deducido",
+      contexto: "Repasas tus notas con Àlex.", testigo: null,
+      opciones: [
+        { q: "Repasemos lo que he apuntado. Para cada cosa, dime si la viste o la supones; por ejemplo, el arma o la persona de la esquina.", calidad: "good", tipo: "Revisión + control metacognitivo", corrige: true,
+          porque: "Aclara las incoherencias sin incomodar y separa lo visto de lo deducido. Àlex reconoce sus propias comisiones.",
+          respuesta: "Bueno... el cuchillo no lo vi, me lo imaginé. Y lo de la esquina, igual era un vecino. Lo que vi seguro fue la moto, la barba, el casco y la matrícula." },
+        { q: "Repasemos lo que he apuntado. Lo dejo todo tal como me lo has contado, sin cambiar nada. ¿Te parece bien así?", calidad: "mid", tipo: "Revisión sin contraste",
+          porque: "No separa lo visto de lo supuesto. Su seguridad no garantiza exactitud.",
+          respuesta: "Eso, tal cual." },
+        { q: "Repasemos lo que he apuntado: tres atracadores y un cuchillo. Te noto muy seguro de todo, y eso nos ayuda muchísimo.", calidad: "bad", tipo: "Retroalimentación confirmatoria",
+          porque: "Felicitar su seguridad aumenta su confianza en detalles falsos.",
+          respuesta: "Sí, tío, {{segurísimo: tres y con cuchillo}}." }
+      ] },
+    { fase: "Cierre", principio: "Puerta abierta · evitar contaminación",
+      contexto: "La entrevista termina.", testigo: null,
+      opciones: [
+        { q: "Gracias, Àlex, nos has ayudado mucho. Si recuerdas algo más, llámame, pero cuéntame solo lo que recuerdes tú, no lo que te cuenten.", calidad: "good", tipo: "Cierre + prevención de contaminación",
+          porque: "Abre la puerta a nueva información. Además, tras un blackout fragmentario la persona descubre sus lagunas cuando otros le cuentan lo que pasó, y ese relato ajeno puede ocupar el hueco.",
+          respuesta: "Hecho. Ah, y el de la moto [[no se bajó en ningún momento]]." },
+        { q: "Gracias, Àlex, nos has ayudado mucho. Ya hemos terminado por hoy, así que puedes irte a descansar. Que vaya bien el domingo.", calidad: "mid", tipo: "Cierre sin puerta abierta",
+          porque: "Es cordial, pero no deja abierta la puerta a información posterior.",
+          respuesta: "Vale, chao." },
+        { q: "Gracias, Àlex, nos has ayudado mucho. Si quieres, habla con tus amigos del bar, a ver qué vieron ellos, y luego me llamas.", calidad: "bad", tipo: "Contaminación entre testigos",
+          porque: "Le invita a llenar sus lagunas con lo que cuenten otros. Lo que oiga pasará a ser «su» recuerdo.",
+          respuesta: "Vale, {{lo cuadramos entre todos}}." }
+      ] }
+  ]
+},
+{
+  id: "laia", grupo: "Ha consumido cannabis", nombre: "Laia", edad: "27 años",
+  titulo: "Testigo 4 · Laia, 27 años",
+  evento: "Pagaba en la caja cuando el autor 1 se le coló delante, a menos de un metro.",
+  datos: [
+    ["Testigo", "Laia M., 27 años, diseñadora gráfica. Se había fumado un porro en casa de una amiga una hora antes y bajó a comprar algo de comer"],
+    ["Dónde estaba", "De pie, pagando en la caja. El autor 1 se le coló delante y quedó a menos de un metro"],
+    ["Entrevista", "Domingo por la mañana, en comisaría"]
+  ],
+  tener: "Es la testigo más cercana: oyó su voz y vio su cara. Su relato libre es pobre y desordenado, distorsiona la duración y tiene miedo de meterse en un lío por haber consumido. Es la más vulnerable a que se le sugiera un cuchillo. El artículo de Crossland et al. (2020) estudia el alcohol; aquí se aplican sus principios con prudencia: rapport y propósito antes del relato, reinstauración mental, «cuéntalo todo, pero no adivines» y preguntas abiertas sobre lo que ella misma ha mencionado. Lo que recuerda un testigo intoxicado suele ser menos, pero no menos exacto.",
+  fases: [
+    { fase: "Saludo y rapport", principio: "Personalizar y hablar de temas neutros",
+      contexto: "Laia se sienta con los brazos cruzados.", testigo: null,
+      opciones: [
+        { q: "Hola, Laia, gracias por venir. Me han dicho que eres diseñadora gráfica. ¿En qué estás trabajando ahora? Así nos conocemos un poco.", calidad: "good", tipo: "Rapport con temas neutros",
+          porque: "Como en el protocolo del artículo, primero se habla de temas neutros hasta que la testigo se relaja. Con Laia, que llega con miedo, es especialmente importante.",
+          respuesta: "Ahora en el cartel de un festival... (Descruza los brazos.) Perdona, es que estoy un poco nerviosa." },
+        { q: "Hola, Laia, gracias por venir. Antes de empezar, cuéntame un poco cómo estabas tú esa noche y qué hacías por allí a esas horas.", calidad: "mid", tipo: "Foco en la testigo",
+          porque: "Aunque el tono sea amable, pone el foco en ella. Laia lo vive como desconfianza y responde con frases cortas.",
+          respuesta: "Bien. Normal. Bajé a comprar. No me acuerdo de mucho." },
+        { q: "Hola, Laia, gracias por venir. Antes de empezar, una pregunta sin importancia: esa noche habías consumido algo, ¿verdad? Es solo para tenerlo en cuenta.", calidad: "bad", tipo: "Con expectativa sobre su consumo",
+          porque: "Lo primero que oye es una sospecha sobre su consumo, aunque se diga con suavidad. Se cierra y omite detalles para no parecer «colocada».",
+          respuesta: "No... nada. {{Tampoco vi casi nada}}." }
+      ] },
+    { fase: "Propósito y garantías", principio: "Explicar el objetivo · contarlo todo sin adivinar",
+      contexto: "Le explicas para qué es la entrevista.", testigo: "¿Y esto para qué es exactamente?",
+      opciones: [
+        { q: "Te explico: estás aquí como testigo y lo que tomaras no se investiga. Tú llevas el relato; cuéntame todo lo que recuerdes, pero sin adivinar.", calidad: "good", tipo: "Garantías + transferir el control + «no adivines»",
+          porque: "Da garantías, explica el objetivo, cede el control y da la instrucción del artículo: informar de todo, pero sin adivinar.",
+          respuesta: "Vale... uf. Sí, [[me había fumado un porro antes]], la verdad. Pero me acuerdo de cosas." },
+        { q: "Te explico: necesitamos una descripción completa del autor, así que dame todos los datos que puedas, aunque no estés del todo segura.", calidad: "mid", tipo: "Completitud a costa de exactitud",
+          porque: "El artículo indica que los testigos intoxicados regulan su memoria priorizando la exactitud. Empujarles a dar datos de los que no están seguros fomenta los errores.",
+          respuesta: "Vale... lo intento. Era ((alto, de unos cuarenta años)), creo." },
+        { q: "Te explico: sabemos que el cannabis afecta a la memoria, así que valoraremos tu relato con cautela. Tú cuéntame lo que puedas.", calidad: "bad", tipo: "Descrédito anticipado",
+          porque: "Según el artículo, un testigo intoxicado recuerda menos, pero lo que cuenta es igual de exacto. Anticipar desconfianza hace que se guarde detalles.",
+          respuesta: "Vale... entonces te digo solo lo básico, por si me equivoco." }
+      ] },
+    { fase: "Reinstauración del contexto", principio: "Reinstauración mental con pausas",
+      contexto: "Laia parece más tranquila.", testigo: "Estaba en la caja pagando.",
+      opciones: [
+        { q: "Cierra los ojos o mira al suelo, como prefieras. Piensa en esa noche... qué hacías antes de bajar... estás en la caja... qué oyes, qué hueles.", calidad: "good", tipo: "Reinstauración mental (guion del artículo)",
+          porque: "Sigue el guion de reinstauración del estudio, con pausas y claves sensoriales: así salen la mascarilla azul y el ruido de la moto.",
+          respuesta: "Llevaba unas patatas y un zumo... [[Olía muchísimo a tabaco]]. Fuera [[se oía una moto con el motor encendido]]. Y él [[llevaba una mascarilla azul, de las de farmacia]]." },
+        { q: "Para situarme, una cosa que me ayudaría mucho: ¿cuánto tiempo crees que duró todo, desde que entró hasta que se fue de la tienda?", calidad: "mid", tipo: "Estimación temporal",
+          porque: "El cannabis y el estrés distorsionan la duración. Es un dato que no debe tomarse como fiable.",
+          respuesta: "((Como diez minutos)). Se me hizo eterno." },
+        { q: "Para situarme, imagino que en la tienda había bastante gente y mucho jaleo, ¿no? Cuéntame un poco cómo estaba todo aquello.", calidad: "bad", tipo: "Con expectativa · construye la escena",
+          porque: "Construye por ella una escena que no fue así (había tres clientes). La testigo la acepta y la añade a su recuerdo.",
+          respuesta: "Sí, {{había bastante gente}}, {{mucho jaleo}}." }
+      ] },
+    { fase: "Relato libre", principio: "Informar de todo · dejar tiempo",
+      contexto: "Laia tiene la escena en la cabeza.", testigo: "Vale, ya estoy allí.",
+      opciones: [
+        { q: "Cuando tengas la imagen clara, cuéntame todo lo que recuerdes, en el orden que te salga. Si te quedas en silencio, no pasa nada; te espero.", calidad: "good", tipo: "Relato libre + tiempo",
+          porque: "Le da tiempo y no rellena sus silencios. El relato sale desordenado, pero con la frase y el olor.",
+          respuesta: "Le dijo al chico de la caja [[«La caja, rápido, no me hagas hacerlo»]]. [[Tenía la voz ronca y hablaba como de aquí]]. ((Le empujó y luego el chico le dio el dinero)). Y [[se llevó tabaco, cartones]]." },
+        { q: "Cuéntame en pocas palabras qué pasó, solo lo principal. Luego, si hace falta, ya iremos viendo los detalles poco a poco.", calidad: "mid", tipo: "Relato demasiado corto",
+          porque: "Pide un resumen a alguien cuyo recuerdo libre ya es pobre. Se pierde casi todo.",
+          respuesta: "Pues que robó... [[se llevó tabaco]]... no sé." },
+        { q: "Cuéntame qué pasó. Me interesa sobre todo el momento en que le apuntó con el cuchillo: ¿qué hiciste tú en ese momento?", calidad: "bad", tipo: "Implicativa (Stern)",
+          porque: "Presupone un cuchillo. Laia lo incorpora y, a partir de ahí, lo describe.",
+          respuesta: "Me quedé quieta... {{El cuchillo era de cocina, plateado}}." }
+      ] },
+    { fase: "Preguntas: el autor", principio: "Preguntas compatibles con el testigo",
+      contexto: "En su relato, lo primero que ha mencionado es la voz y la frase del autor.", testigo: "Lo tenía al lado, casi tocándome.",
+      opciones: [
+        { q: "Has mencionado su voz y lo que dijo. ¿Puedes contarme más sobre él y sobre cómo era? Lo que no sepas, dime «no lo sé».", calidad: "good", tipo: "Abierta sobre un tema que ella mencionó",
+          porque: "Retoma un tema que la testigo ha mencionado, en su mismo orden, con una pregunta abierta y permiso para no saber. Aun así, puede aportar algún error propio.",
+          respuesta: "[[Se bajó la mascarilla para hablar]]. [[Era joven, con la cara delgada]]... y ((una cicatriz en la ceja)), creo. La chaqueta era verde o marrón, no lo sé." },
+        { q: "Has mencionado su voz. Para la descripción, me ayudaría mucho saber una cosa concreta: ¿tenía el pelo moreno o rubio?", calidad: "mid", tipo: "Disyuntiva imperfecta",
+          porque: "Llevaba capucha y gorra: no se le veía el pelo. Las dos opciones empujan a elegir una.",
+          respuesta: "Eh... {{moreno}}, ¿no? No sé." },
+        { q: "Has mencionado su voz. Para la descripción, me ayudaría saber cómo eran las gafas de sol que llevaba. ¿Las recuerdas bien?", calidad: "bad", tipo: "Implicativa (Stern)",
+          porque: "Presupone un accesorio que no llevaba. Laia, insegura, lo acepta y lo describe.",
+          respuesta: "Eh... {{oscuras, normales}}, creo." }
+      ] },
+    { fase: "Preguntas: el objeto", principio: "Preguntas compatibles · sin presuponer",
+      contexto: "También ha comentado que «daba mucho miedo».", testigo: "Daba mucho miedo, de verdad.",
+      opciones: [
+        { q: "Has dicho que daba mucho miedo. ¿Puedes contarme más sobre ese momento y sobre sus manos? Si algo no lo viste bien, también me sirve.", calidad: "good", tipo: "Abierta · no presupone ningún objeto",
+          porque: "Parte de sus palabras y pregunta por las manos sin presuponer un arma. Laia puede decir lo que vio y también lo que no vio.",
+          respuesta: "[[Algo llevaba en la mano]]... pero no lo vi bien. No lo sé. Daba miedo por cómo lo dijo." },
+        { q: "Has dicho que daba mucho miedo. ¿Qué tipo de arma llevaba en la mano? Descríbemela como puedas, sin preocuparte por nada, tranquila.", calidad: "mid", tipo: "Presupone un arma",
+          porque: "Da por hecho que era un arma, cuando ella no lo vio bien.",
+          respuesta: "¿Arma? Pues... {{algo afilado}}, supongo." },
+        { q: "Has dicho que daba mucho miedo. Era una pistola pequeña, ¿no? Es lo que suelen usar en estos casos, por lo que sabemos.", calidad: "bad", tipo: "Con expectativa",
+          porque: "Sugiere un objeto concreto que no existía, apoyado en lo que «suele pasar».",
+          respuesta: "{{Igual sí, una pistola pequeña}}." }
+      ] },
+    { fase: "Revisión", principio: "Ordenar la secuencia con el testigo",
+      contexto: "Repasas tus notas con Laia.", testigo: null,
+      opciones: [
+        { q: "Te leo lo que he anotado, en orden, y tú me corriges todo lo que no esté bien o lo que quieras añadir.", calidad: "good", tipo: "Revisión de la secuencia", corrige: true,
+          porque: "Al repasar el orden de los hechos, Laia corrige su error de secuencia.",
+          respuesta: "Espera: primero [[el chico de la caja le dio el dinero y luego le empujó al salir]]. Lo había dicho al revés." },
+        { q: "Con lo que me has contado ya tengo una buena idea de lo que pasó. Lo dejo tal cual y así no te entretengo más.", calidad: "mid", tipo: "Revisión omitida",
+          porque: "El error de secuencia se queda en la declaración.",
+          respuesta: "Vale, gracias." },
+        { q: "Te leo lo que he anotado. Veo que algunas cosas no acaban de encajar; ¿estás segura de todo lo que me has contado?", calidad: "bad", tipo: "Duda generalizada",
+          porque: "Expresar dudas sin concretar hace que la testigo desconfíe de todo su relato y retire información exacta.",
+          respuesta: "Pues... {{quita lo de la mascarilla}}, ya no sé nada." }
+      ] },
+    { fase: "Cierre", principio: "Puerta abierta y relación positiva",
+      contexto: "La entrevista termina.", testigo: null,
+      opciones: [
+        { q: "Gracias, Laia, nos has ayudado mucho. Si recuerdas algo más, llámame. Y lo que has contado sobre tu consumo no irá en tu contra.", calidad: "good", tipo: "Cierre + garantías",
+          porque: "Abre la puerta a información posterior y refuerza la confianza.",
+          respuesta: "Gracias, de verdad. Me voy más tranquila." },
+        { q: "Gracias, Laia, nos has ayudado mucho. Ya hemos terminado por hoy, así que puedes irte a casa tranquila. Que vaya bien.", calidad: "mid", tipo: "Cierre sin puerta abierta",
+          porque: "Es cordial, pero no anima a aportar información nueva más adelante.",
+          respuesta: "Vale." },
+        { q: "Gracias, Laia, nos has ayudado mucho. Un consejo, con cariño: la próxima vez que hayas fumado, mejor quédate en casa, ¿vale?", calidad: "bad", tipo: "Juicio moral",
+          porque: "Aunque se diga con cariño, es un juicio sobre su consumo. Es poco probable que vuelva para aportar algo más.",
+          respuesta: "Ya... vale. Adiós." }
+      ] }
+  ]
+}
+];
+
+
+const COMPARATIVA = [
+  ["Hora: 23:38", ["n", "«Las once» (error)"], ["d", "—"], ["d", "—"], ["d", "—"]],
+  ["Duración: 1 min 40 s", ["d", "—"], ["n", "«Mucho rato»"], ["d", "—"], ["n", "«Diez minutos» (error)"]],
+  ["N.º de autores: 2", ["y", "2 ✓"], ["d", "1 (solo vio uno)"], ["n", "3 (comisión)"], ["d", "1 (solo vio uno)"]],
+  ["Objeto: destornillador amarillo", ["d", "—"], ["y", "«Hierro amarillo» ✓"], ["n", "«Cuchillo» (comisión)"], ["d", "«Algo en la mano»"]],
+  ["Chaqueta verde oliva", ["y", "«Caqui» ✓"], ["d", "—"], ["d", "—"], ["d", "«Verde o marrón»"]],
+  ["Mascarilla azul", ["d", "—"], ["d", "—"], ["d", "—"], ["y", "✓"]],
+  ["Zapatillas blancas, suela roja", ["d", "—"], ["y", "✓"], ["d", "—"], ["d", "—"]],
+  ["Tatuaje de golondrina", ["d", "—"], ["y", "✓"], ["d", "—"], ["d", "—"]],
+  ["Cara del autor 1", ["d", "—"], ["d", "—"], ["d", "—"], ["y", "Joven, delgado ✓ + cicatriz (comisión)"]],
+  ["Voz y frase", ["d", "—"], ["y", "«Dinero rápido» ✓"], ["d", "—"], ["y", "Frase literal ✓"]],
+  ["Botín: dinero + tabaco", ["y", "«Cajas» ✓"], ["y", "Dinero ✓"], ["d", "—"], ["y", "Tabaco ✓"]],
+  ["Moto gris tipo scooter", ["y", "✓"], ["d", "—"], ["y", "✓ (detallado)"], ["d", "—"]],
+  ["Matrícula acaba en 47", ["d", "—"], ["d", "—"], ["y", "✓"], ["d", "—"]],
+  ["Conductor: casco blanco, barba", ["y", "Casco ✓"], ["d", "—"], ["y", "✓"], ["d", "—"]],
+  ["Mochila de reparto amarilla", ["y", "✓"], ["d", "—"], ["d", "— (omisión)"], ["d", "—"]],
+  ["Huida: montaña y derecha", ["y", "✓"], ["d", "—"], ["y", "Montaña ✓"], ["d", "—"]]
+];
+
+const DEBATE = [
+  "¿Qué testigo os parecía más fiable antes de ver la verdad? ¿Y después? ¿Influyó su seguridad al hablar?",
+  "Àlex era el más seguro y tiene dos comisiones graves. ¿Qué nos dice esto de la relación entre confianza y exactitud?",
+  "¿Cuándo habríais entrevistado a Àlex y a Laia: en el momento o al día siguiente? ¿Qué se gana y qué se pierde?",
+  "Con Montse y Pol, ¿qué parte del error venía del testigo y qué parte la creó el entrevistador?",
+  "¿Es realista aplicar la EC completa en una comisaría un sábado por la noche? ¿Qué elementos mínimos usaríais si solo tenéis 10 minutos?"
+];
+
+const BANDAS = [
+  { min: 90, titulo: "Entrevista cognitiva excelente", texto: "Preguntas abiertas, contexto reinstaurado y nada sugerido. Has obtenido todo lo que este testigo podía aportar." },
+  { min: 70, titulo: "Buena entrevista", texto: "La mayoría de tus preguntas facilitan el recuerdo. Revisa las fases marcadas en ámbar o rojo." },
+  { min: 45, titulo: "Entrevista mejorable", texto: "Has obtenido parte de la información, pero con preguntas cerradas, interrupciones o presión. Se han quedado detalles sin recuperar." },
+  { min: 0,  titulo: "Testimonio contaminado", texto: "Tus preguntas han introducido detalles falsos en la declaración. Compara lo que consta con lo que pasó de verdad." }
+];
+
+/* ================= LÓGICA ================= */
+const app = document.getElementById("app");
+const VACIO = () => ({ screen: "intro", caso: null, fase: 0, picks: [], orden: [], flags: {} });
+let S = VACIO();
+let mejores = {};
+try { mejores = JSON.parse(localStorage.getItem("ec-rosa-mejores") || "{}") || {}; } catch (e) { mejores = {}; }
+
+const caso = () => CASOS.find(c => c.id === S.caso);
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function marcas(t) {
+  return esc(t)
+    .replace(/\[\[(.+?)\]\]/g, '<span class="ok" title="Detalle exacto">$1</span>')
+    .replace(/\{\{(.+?)\}\}/g, '<span class="fx" title="Falso: lo ha introducido tu pregunta">$1</span>')
+    .replace(/\(\((.+?)\)\)/g, '<span class="own" title="Error propio del testigo">$1</span>');
+}
+const RE_OK = /\[\[(.+?)\]\]/g, RE_FX = /\{\{(.+?)\}\}/g, RE_OWN = /\(\((.+?)\)\)/g;
+const extrae = (t, re) => [...t.matchAll(re)].map(m => m[1]);
+const opcion = p => caso().fases[p.f].opciones[p.o];
+const respuesta = (o, flags) => (flags.meta && o.respuestaMeta) ? o.respuestaMeta : o.respuesta;
+const puntos = picks => picks.reduce((s, p) => s + PUNTOS[opcion(p).calidad], 0);
+function detalles() {
+  const ok = [], fx = [], own = [];
+  S.picks.forEach(p => { const r = p.r; ok.push(...extrae(r, RE_OK)); fx.push(...extrae(r, RE_FX)); own.push(...extrae(r, RE_OWN)); });
+  const corrigio = S.picks.some(p => opcion(p).corrige);
+  return { ok, fx, own: corrigio ? [] : own, corregidos: corrigio ? own : [] };
+}
+const totalExactos = c => c.fases.reduce((s, f) => s + Math.max(...f.opciones.map(o => Math.max(extrae(o.respuesta, RE_OK).length, extrae(o.respuestaMeta || "", RE_OK).length))), 0);
+
+function topHTML() {
+  let meters = "";
+  if (S.caso && S.screen !== "ficha") {
+    const c = caso(), d = detalles();
+    const steps = c.fases.map((_, i) => {
+      const p = S.picks.find(x => x.f === i);
+      if (p) return `<i class="done-${opcion(p).calidad}"></i>`;
+      return `<i class="${i === S.fase && S.screen === "fase" ? "now" : ""}"></i>`;
+    }).join("");
+    meters = `<div class="meters">
+      <div class="meter"><span class="label">Fases</span><div class="steps" aria-label="Progreso">${steps}</div></div>
+      <div class="meter"><span class="label">Declaración de ${esc(c.nombre)}</span><div class="counts"><span class="pill g">${d.ok.length} exactos</span><span class="pill b">${d.fx.length} inducidos</span><span class="pill m">${d.own.length} propios</span></div></div>
+    </div>`;
+  }
+  return `<div class="top"><button class="brand" id="home-top" title="Volver a los testigos"><span>Minimarket Rosa</span></button>${meters}</div>`;
+}
+function bindTop() { const h = document.getElementById("home-top"); if (h) h.onclick = () => go(VACIO()); }
+
+const atestadoHTML = () => `<div class="atestado"><span class="label">Atestado inicial</span><b>${esc(ATESTADO.cabecera)}</b><p>${esc(ATESTADO.texto)}</p><p><b>Objetivo:</b> ${esc(ATESTADO.objetivo)}</p></div>`;
+function fichaHTML(c, abierta) {
+  return `<details class="ficha" ${abierta ? "open" : ""}>
+    <summary><span class="label">Ficha del testigo</span><h3>${esc(c.titulo)}</h3></summary>
+    ${atestadoHTML()}
+    <dl>${c.datos.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    <div class="tener"><b>A tener en cuenta con este testigo.</b> ${esc(c.tener)}</div>
+  </details>`;
+}
+const legendHTML = () => `<div class="marks-legend"><span><span class="ok">Subrayado verde</span>: detalle exacto</span><span><span class="fx">Rojo</span>: falso, lo ha introducido tu pregunta</span><span><span class="own">Ámbar</span>: error propio del testigo</span></div>`;
+
+function renderIntro() {
+  const cards = CASOS.map(c => {
+    const max = c.fases.length * PUNTOS.good;
+    const best = mejores[c.id];
+    return `<button class="case" data-id="${c.id}">
+      <span class="tagw">${esc(c.grupo)}</span>
+      <h3>${esc(c.nombre)}, ${esc(c.edad)}</h3>
+      <span class="ev">${esc(c.evento)}</span>
+      <span class="foot"><span class="label">${c.fases.length} fases</span>${best != null ? `<span class="pill ${best / max >= .7 ? "g" : best / max >= .45 ? "m" : "b"}">Mejor: ${best}/${max}</span>` : `<span class="label">Sin entrevistar</span>`}</span>
+    </button>`;
+  }).join("");
+  app.innerHTML = `${topHTML()}
+  <section class="intro">
+    <span class="label">Caso práctico de entrevista cognitiva</span>
+    <h1>Atraco en el Minimarket Rosa</h1>
+    <p>Un mismo delito y cuatro testigos que lo vivieron desde lugares, estados y edades distintos. Tú solo tienes el atestado. Elige a quién entrevistar y, en cada fase, la pregunta que harías. Una buena pregunta recupera lo que el testigo vio. Una pregunta sugestiva hace que te devuelva lo que tú le has puesto en la boca.</p>
+  </section>
+  ${atestadoHTML()}
+  <div class="legend">
+    <div class="rule g"><b>+${PUNTOS.good} pts</b>Bien formulada: abierta, no sugiere, facilita el recuerdo.</div>
+    <div class="rule m"><b>+${PUNTOS.mid} pts</b>Mejorable: cerrada, interrumpe, presiona o no se adapta.</div>
+    <div class="rule b"><b>+${PUNTOS.bad} pts</b>Mal formulada: sugestiva, juzga o contamina el recuerdo.</div>
+  </div>
+  ${legendHTML()}
+  <h2>Elige un testigo</h2>
+  <div class="cases">${cards}</div>
+  <div class="row"><button class="ghost" id="comp">Ver la verdad y la comparativa (para el final)</button></div>`;
+  bindTop();
+  app.querySelectorAll(".case").forEach(b => b.onclick = () => go({ ...VACIO(), screen: "ficha", caso: b.dataset.id }));
+  document.getElementById("comp").onclick = () => go({ ...VACIO(), screen: "comparativa" });
+}
+
+function renderFicha() {
+  const c = caso();
+  app.innerHTML = `${topHTML()}
+  <div class="phase-head"><span class="label">${esc(c.grupo)}</span><h2>${esc(c.nombre)}, ${esc(c.edad)}</h2><p class="context">${esc(c.evento)}</p></div>
+  ${fichaHTML(c, true)}
+  <div class="row"><button class="cta" id="start">Empezar la entrevista</button><button class="ghost" id="back">Elegir otro testigo</button></div>`;
+  bindTop();
+  document.getElementById("start").onclick = () => go({ ...VACIO(), screen: "fase", caso: c.id, orden: shuffle([0, 1, 2]) });
+  document.getElementById("back").onclick = () => go(VACIO());
+}
+
+function renderFase() {
+  const c = caso(), F = c.fases[S.fase];
+  const pick = S.picks.find(p => p.f === S.fase);
+  const lines = [];
+  if (F.testigo) lines.push(`<div class="line wit"><span class="who">${esc(c.nombre)}</span><div class="said">${esc(F.testigo)}</div></div>`);
+  let gain = "";
+  if (pick) {
+    const o = F.opciones[pick.o];
+    lines.push(`<div class="line you new"><span class="who">Tú</span><div class="said">${esc(o.q)}</div></div>`);
+    lines.push(`<div class="line wit new"><span class="who">${esc(c.nombre)}</span><div class="said">${marcas(pick.r)}</div></div>`);
+    const nOk = extrae(pick.r, RE_OK).length, nFx = extrae(pick.r, RE_FX).length, nOwn = extrae(pick.r, RE_OWN).length;
+    let nota = "";
+    if (nFx) nota = "Esto no lo vio: se lo ha dado tu pregunta.";
+    else if (o.corrige) nota = "El testigo corrige sus propios errores.";
+    else if (nOwn) nota = "Error del propio testigo: nadie se lo ha sugerido, pero queda en la declaración.";
+    else if (o.respuestaMeta && S.flags.meta) nota = "Gracias a tus instrucciones, separa lo que vio de lo que supone.";
+    else if (!nOk) nota = "La respuesta no aporta información nueva.";
+    gain = `<div class="gain"><span class="pill g">+${nOk} exactos</span><span class="pill b">+${nFx} inducidos</span>${nOwn ? `<span class="pill m">+${nOwn} propios</span>` : ""}${nota ? `<span>${nota}</span>` : ""}</div>`;
+  }
+  const opts = S.orden.map((idx, n) => {
+    const o = F.opciones[idx];
+    const rev = !!pick;
+    const cls = rev ? `revealed r-${o.calidad} ${pick.o === idx ? "chosen" : ""}` : "";
+    const fb = rev ? `<div class="fb"><span class="tag">${ETIQUETA[o.calidad]} · ${esc(o.tipo)} · +${PUNTOS[o.calidad]}</span><span>${esc(o.porque)}</span></div>` : "";
+    return `<button class="opt ${cls}" data-i="${idx}" ${rev ? "disabled" : ""}><span class="k">${"ABC"[n]}</span><span class="q">${esc(o.q)}</span>${fb}</button>`;
+  }).join("");
+  const last = S.fase === c.fases.length - 1;
+  app.innerHTML = `${topHTML()}
+  ${fichaHTML(c, false)}
+  <div class="phase-head">
+    <span class="label">Fase ${S.fase + 1} de ${c.fases.length}</span>
+    <h2>${esc(F.fase)}</h2>
+    <span class="principio">${esc(F.principio)}</span>
+    <p class="context">${esc(F.contexto)}</p>
+  </div>
+  <div class="transcript">${lines.join("")}${gain}</div>
+  <div class="options" role="group" aria-label="Elige una pregunta">${opts}</div>
+  ${pick ? `<button class="cta" id="next">${last ? "Ver resultado" : "Siguiente fase"}</button>` : `<span class="label">Elige la pregunta que harías</span>`}`;
+  bindTop();
+  app.querySelectorAll(".opt:not(:disabled)").forEach(b => b.onclick = () => {
+    const o = F.opciones[+b.dataset.i];
+    const r = respuesta(o, S.flags);
+    if (o.flag) S.flags[o.flag] = true;
+    S.picks.push({ f: S.fase, o: +b.dataset.i, r });
+    render();
+  });
+  const nx = document.getElementById("next");
+  if (nx) { nx.focus({ preventScroll: true }); nx.onclick = () => {
+    if (last) { S.screen = "fin"; guardarMejor(); } else { S.fase++; S.orden = shuffle([0, 1, 2]); }
+    render(); window.scrollTo({ top: 0, behavior: "smooth" });
+  }; }
+}
+
+function guardarMejor() {
+  const pts = puntos(S.picks);
+  if (mejores[S.caso] == null || pts > mejores[S.caso]) mejores[S.caso] = pts;
+  try { localStorage.setItem("ec-rosa-mejores", JSON.stringify(mejores)); } catch (e) {}
+}
+
+const li = arr => arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="none">Ninguno.</p>`;
+const hechosHTML = () => `<div class="truth"><span class="label">Lo que pasó de verdad</span><ul class="debate">${HECHOS.map(h => `<li>${esc(h)}</li>`).join("")}</ul></div>`;
+
+function renderFin() {
+  const c = caso();
+  const MAX = c.fases.length * PUNTOS.good;
+  const pts = puntos(S.picks), pct = Math.round(pts / MAX * 100);
+  const d = detalles();
+  const banda = d.fx.length >= 4 && pct < 70 ? BANDAS[3] : BANDAS.find(b => pct >= b.min);
+  const n = q => S.picks.filter(p => opcion(p).calidad === q).length;
+  const rows = S.picks.map(p => {
+    const F = c.fases[p.f], o = F.opciones[p.o];
+    const mejor = F.opciones.find(x => x.calidad === "good");
+    return `<div class="rv"><span class="stripe s-${o.calidad}"></span>
+      <div class="body"><span class="label">${p.f + 1} · ${esc(F.fase)}</span>
+        <span class="q">${esc(o.q)}</span>
+        <span class="why">${esc(o.tipo)}. ${esc(o.porque)}</span>
+        ${o.calidad !== "good" ? `<span class="better"><b>Mejor:</b> ${esc(mejor.q)}</span>` : ""}
+      </div><span class="pts">+${PUNTOS[o.calidad]}</span></div>`;
+  }).join("");
+  const ownList = d.own.length || d.corregidos.length
+    ? `<ul>${d.own.map(x => `<li>${esc(x)}</li>`).join("")}${d.corregidos.map(x => `<li><s>${esc(x)}</s> (corregido en la revisión)</li>`).join("")}</ul>`
+    : `<p class="none">Ninguno.</p>`;
+  app.innerHTML = `${topHTML()}
+  <span class="label">Resultado · ${esc(c.titulo)}</span>
+  <div class="score">
+    <div class="big">${pts}<small> / ${MAX}</small></div>
+    <div class="verdict"><h2>${banda.titulo} · ${pct}%</h2><p>${banda.texto}</p></div>
+  </div>
+  <div class="row"><span class="pill g">${n("good")} bien formuladas</span><span class="pill m">${n("mid")} mejorables</span><span class="pill b">${n("bad")} mal formuladas</span></div>
+  <div class="compare three">
+    <div class="box g"><h3>${d.ok.length} de ${totalExactos(c)} exactos</h3><p class="label">Lo que vio de verdad y consta en la declaración</p>${li(d.ok)}</div>
+    <div class="box b"><h3>${d.fx.length} inducidos</h3><p class="label">Comisiones creadas por tus preguntas</p>${li(d.fx)}</div>
+    <div class="box o"><h3>${d.own.length} propios</h3><p class="label">Errores que aporta el testigo por sí solo</p>${ownList}</div>
+  </div>
+  ${hechosHTML()}
+  <h3>Repaso fase a fase</h3>
+  <div class="review">${rows}</div>
+  <div class="row"><button class="cta" id="again">Repetir con ${esc(c.nombre)}</button><button class="ghost" id="home">Entrevistar a otro testigo</button><button class="ghost" id="comp">Comparativa de los 4 testigos</button></div>`;
+  bindTop();
+  document.getElementById("again").onclick = () => go({ ...VACIO(), screen: "fase", caso: c.id, orden: shuffle([0, 1, 2]) });
+  document.getElementById("home").onclick = () => go(VACIO());
+  document.getElementById("comp").onclick = () => go({ ...VACIO(), screen: "comparativa" });
+}
+
+function renderComparativa() {
+  const head = `<tr><th>Dato real</th>${CASOS.map(c => `<th>${esc(c.nombre)} (${esc(c.edad.replace(" años", ""))})</th>`).join("")}</tr>`;
+  const body = COMPARATIVA.map(([dato, ...cols]) => `<tr><td>${esc(dato)}</td>${cols.map(([k, v]) => `<td class="${k}">${esc(v)}</td>`).join("")}</tr>`).join("");
+  app.innerHTML = `${topHTML()}
+  <div class="phase-head"><span class="label">Para el final</span><h2>La verdad y la comparativa</h2>
+  <p class="context">Ninguno de los cuatro testigos tiene la historia completa. Juntando solo lo exacto de cada uno se reconstruye casi todo el suceso. La tabla muestra lo que aporta cada testigo en una buena entrevista.</p></div>
+  ${hechosHTML()}
+  <div class="tablewrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>
+  <p class="label">✓ dato exacto · — no lo menciona (no pudo verlo u omisión) · comisión: aporta información falsa</p>
+  <p>Comisiones que solo aparecen con una mala entrevista: la moto roja (Montse), el cuchillo grande y el cambio de color (Pol), la descripción del cuchillo (Laia).</p>
+  <h3>Preguntas para el debate</h3>
+  <ol class="debate">${DEBATE.map(q => `<li>${esc(q)}</li>`).join("")}</ol>
+  <p class="label">Referencia: de la Fuente Arnanz, J. (2016). La memoria de los testigos. Editorial UOC. Cap. 4. El caso es ficticio.</p>
+  <div class="row"><button class="cta" id="home">Volver a los testigos</button></div>`;
+  bindTop();
+  document.getElementById("home").onclick = () => go(VACIO());
+}
+
+function go(next) { S = next; render(); window.scrollTo({ top: 0 }); }
+function render() {
+  if (!["intro", "comparativa"].includes(S.screen) && !caso()) S = VACIO();
+  if (!S.flags) S.flags = {};
+  ({ intro: renderIntro, ficha: renderFicha, fase: renderFase, fin: renderFin, comparativa: renderComparativa })[S.screen]();
+}
+
+window.claude?.hot?.snapshot?.(() => S);
+function start(data) { if (data && data.screen && data.picks && data.picks.every(p => typeof p.r === "string")) S = Object.assign(VACIO(), data); render(); }
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+
+</html>
